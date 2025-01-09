@@ -6,12 +6,11 @@ groups:
   - docker
 
 users:
+  - name: root
   - name: howtosl
     groups: [sudo, docker]
     shell: /bin/bash
     sudo: ['ALL=(ALL) NOPASSWD:ALL']
-    ssh_authorized_keys:
-      - ${ssh_public_key}
 
 packages:
   - apt-transport-https
@@ -38,7 +37,7 @@ write_files:
     content: |
       server {
           listen 80;
-          server_name ${domain_name} www.${domain_name};
+          server_name howtosl.com www.howtosl.com;
           
           location / {
               proxy_pass http://localhost:1313;
@@ -63,21 +62,47 @@ write_files:
 
   - path: /etc/ssh/sshd_config.d/hardening.conf
     content: |
-      PermitRootLogin no
+      PermitRootLogin yes
       PasswordAuthentication no
-      AllowUsers howtosl
+      AllowUsers root howtosl
 
 runcmd:
   # Basic security
   - systemctl restart sshd
-  
+  - ufw allow OpenSSH
+  - ufw allow 'Nginx Full'
+  - ufw --force enable
+  - systemctl start fail2ban
+  - systemctl enable fail2ban
+
+  # Setup Nginx
+  - ln -s /etc/nginx/sites-available/howtosl.com /etc/nginx/sites-enabled/
+  - rm /etc/nginx/sites-enabled/default
+  - systemctl restart nginx
+
+  # Setup project directory
+  - mkdir -p /var/www/howtosl
+  - chown -R howtosl:howtosl /var/www/howtosl
+  - cd /var/www/howtosl
+  - sudo -u howtosl git init
+  - sudo -u howtosl git config --global init.defaultBranch main
+
+  # Create .ssh directory with proper permissions
+  - mkdir -p /home/howtosl/.ssh
+  - chown -R howtosl:howtosl /home/howtosl/.ssh
+  - chmod 700 /home/howtosl/.ssh
+
+  # Setup SSH key for GitHub
+  - su - howtosl -c "ssh-keygen -t ed25519 -f /home/howtosl/.ssh/github_ed25519 -N ''"
+  - su - howtosl -c "echo 'Host github.com\n  IdentityFile ~/.ssh/github_ed25519\n  StrictHostKeyChecking no' > /home/howtosl/.ssh/config"
+  - chmod 600 /home/howtosl/.ssh/config
+  - chown howtosl:howtosl /home/howtosl/.ssh/config
+
   # Install Docker
   - curl -fsSL https://get.docker.com -o get-docker.sh
   - sh get-docker.sh
-  - systemctl enable docker
   - systemctl start docker
-  
-  # Install Docker Compose
+  - systemctl enable docker
   - curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
   - chmod +x /usr/local/bin/docker-compose
 
@@ -85,32 +110,38 @@ runcmd:
   - ufw allow 22/tcp
   - ufw allow 80/tcp
   - ufw allow 443/tcp
-  - ufw --force enable
-
-  # Configure fail2ban
-  - systemctl enable fail2ban
-  - systemctl start fail2ban
+  - ufw allow 2376/tcp
+  - ufw allow 2377/tcp
+  - ufw allow 7946/tcp
+  - ufw allow 7946/udp
+  - ufw allow 4789/udp
 
   # Configure Nginx and SSL
   - systemctl enable nginx
   - systemctl start nginx
-  - ln -s /etc/nginx/sites-available/howtosl.com /etc/nginx/sites-enabled/
-  - rm /etc/nginx/sites-enabled/default
-  - systemctl restart nginx
-  - certbot --nginx -d ${domain_name} -d www.${domain_name} --non-interactive --agree-tos --email ${admin_email}
-
-  # Setup project directory
-  - mkdir -p /opt/howtosl
-  - chown -R howtosl:howtosl /opt/howtosl
+  - certbot --nginx -d howtosl.com -d www.howtosl.com --non-interactive --agree-tos --email alex@bramox.com
 
   # Clone and setup the project
-  - su - howtosl -c "git clone https://github.com/yourusername/howtosl.git /opt/howtosl"
+  - su - howtosl -c "git clone https://github.com/bramox/howtoSL.git /opt/howtosl"
   - cd /opt/howtosl
-  - docker-compose up -d
-
+  
+  # Install Hugo
+  - wget https://github.com/gohugoio/hugo/releases/download/v0.121.1/hugo_extended_0.121.1_linux-amd64.deb
+  - dpkg -i hugo_extended_0.121.1_linux-amd64.deb
+  
+  # Setup Hugo service
+  - cp /opt/howtosl/howtosl.service /etc/systemd/system/
+  - systemctl daemon-reload
+  - systemctl enable howtosl
+  - systemctl start howtosl
+  
   # Install monitoring agent
   - curl -sSL https://raw.githubusercontent.com/netdata/netdata/master/packaging/installer/install-required-packages.sh | bash
   - wget -O /tmp/netdata-kickstart.sh https://my-netdata.io/kickstart.sh
   - sh /tmp/netdata-kickstart.sh --non-interactive
+
+  # Setup project
+  - cd /opt/howtosl
+  - docker-compose up -d
 
 final_message: "The system is finally up, after $UPTIME seconds"
