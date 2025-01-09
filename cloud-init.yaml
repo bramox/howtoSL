@@ -23,6 +23,8 @@ packages:
   - certbot
   - python3-certbot-nginx
   - nginx
+  - docker.io
+  - docker-compose
 
 write_files:
   - path: /etc/fail2ban/jail.local
@@ -40,23 +42,13 @@ write_files:
           server_name howtosl.com www.howtosl.com;
           
           location / {
-              proxy_pass http://localhost:1313;
+              proxy_pass http://localhost:8080;
               proxy_set_header Host $host;
               proxy_set_header X-Real-IP $remote_addr;
               proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
               proxy_set_header X-Forwarded-Proto $scheme;
               proxy_set_header X-Forwarded-Host $host;
               proxy_set_header X-Forwarded-Port $server_port;
-              
-              # WebSocket support
-              proxy_http_version 1.1;
-              proxy_set_header Upgrade $http_upgrade;
-              proxy_set_header Connection "upgrade";
-              
-              # Таймауты
-              proxy_connect_timeout 60s;
-              proxy_send_timeout 60s;
-              proxy_read_timeout 60s;
           }
       }
 
@@ -75,36 +67,14 @@ runcmd:
   - systemctl start fail2ban
   - systemctl enable fail2ban
 
+  # Setup Docker
+  - systemctl start docker
+  - systemctl enable docker
+
   # Setup Nginx
   - ln -s /etc/nginx/sites-available/howtosl.com /etc/nginx/sites-enabled/
   - rm /etc/nginx/sites-enabled/default
   - systemctl restart nginx
-
-  # Setup project directory
-  - mkdir -p /var/www/howtosl
-  - chown -R howtosl:howtosl /var/www/howtosl
-  - cd /var/www/howtosl
-  - sudo -u howtosl git init
-  - sudo -u howtosl git config --global init.defaultBranch main
-
-  # Create .ssh directory with proper permissions
-  - mkdir -p /home/howtosl/.ssh
-  - chown -R howtosl:howtosl /home/howtosl/.ssh
-  - chmod 700 /home/howtosl/.ssh
-
-  # Setup SSH key for GitHub
-  - su - howtosl -c "ssh-keygen -t ed25519 -f /home/howtosl/.ssh/github_ed25519 -N ''"
-  - su - howtosl -c "echo 'Host github.com\n  IdentityFile ~/.ssh/github_ed25519\n  StrictHostKeyChecking no' > /home/howtosl/.ssh/config"
-  - chmod 600 /home/howtosl/.ssh/config
-  - chown howtosl:howtosl /home/howtosl/.ssh/config
-
-  # Install Docker
-  - curl -fsSL https://get.docker.com -o get-docker.sh
-  - sh get-docker.sh
-  - systemctl start docker
-  - systemctl enable docker
-  - curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-  - chmod +x /usr/local/bin/docker-compose
 
   # Configure UFW
   - ufw allow 22/tcp
@@ -121,31 +91,22 @@ runcmd:
   - systemctl start nginx
   - certbot --nginx -d howtosl.com -d www.howtosl.com --non-interactive --agree-tos --email alex@bramox.com
 
-  # Create project directory with proper permissions
+  # Setup project directory and clone repository
   - mkdir -p /opt/howtosl
   - chown howtosl:howtosl /opt/howtosl
-  
-  # Clone and setup the project
-  - su - howtosl -c "git clone https://github.com/bramox/howtoSL.git /opt/howtosl"
   - cd /opt/howtosl
+  - git clone https://github.com/bramox/howtoSL.git .
+  - git config --global --add safe.directory /opt/howtosl
+  - git submodule init
+  - git submodule update
   
-  # Install Hugo
-  - wget https://github.com/gohugoio/hugo/releases/download/v0.121.1/hugo_extended_0.121.1_linux-amd64.deb
-  - dpkg -i hugo_extended_0.121.1_linux-amd64.deb
-  
-  # Setup Hugo service
-  - cp /opt/howtosl/howtosl.service /etc/systemd/system/
-  - systemctl daemon-reload
-  - systemctl enable howtosl
-  - systemctl start howtosl
-  
+  # Build and run Docker container
+  - docker build -t howtosl .
+  - docker run -d --name howtosl -p 8080:80 --restart unless-stopped howtosl
+
   # Install monitoring agent
   - curl -sSL https://raw.githubusercontent.com/netdata/netdata/master/packaging/installer/install-required-packages.sh | bash
   - wget -O /tmp/netdata-kickstart.sh https://my-netdata.io/kickstart.sh
   - sh /tmp/netdata-kickstart.sh --non-interactive
-
-  # Setup project
-  - cd /opt/howtosl
-  - docker-compose up -d
 
 final_message: "The system is finally up, after $UPTIME seconds"
