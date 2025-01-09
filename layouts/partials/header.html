@@ -1,0 +1,63 @@
+<header class="mx-auto flex h-[4.5rem] max-w-[--w] px-8 lg:justify-center">
+  <div class="relative z-50 ltr:mr-auto rtl:ml-auto flex items-center">
+    <a class="-translate-y-[1px] text-2xl font-medium" style="font-weight: 700;" href="{{ .Site.Home.RelPermalink }}"
+      >{{ site.Title }}</a
+    >
+    
+    <nav class="flex items-center ltr:ml-8">
+      {{ $translations := $.Site.Home.AllTranslations }}
+      {{ range $index, $translation := $translations }}
+        <a
+          href="{{ .Permalink }}"
+          style="text-decoration: none;"
+          class="text-lg ltr:ml-4 rtl:mr-4"
+        >
+          {{ if eq .Language.Lang "en" }}
+            🇬🇧
+          {{ else if eq .Language.Lang "ru" }}
+            🇷🇺
+          {{ end }}
+        </a>
+      {{ end }}
+    </nav>
+  </div>
+
+  <div
+    class="btn-menu relative z-50 ltr:-mr-8 rtl:-ml-8 flex h-[4.5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+    role="button"
+    aria-label="Menu"
+  ></div>
+
+  {{ $bg_color := $.Scratch.Get "bg_color" }}<!---->
+
+  <script>
+    // base
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    // mobile menu
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    {{ $url := .RelPermalink }}<!---->
+    {{ with site.Menus.main }}
+    <nav class="lg:flex lg:flex-row lg:items-center lg:space-x-10">
+      {{ range . }}
+      <a
+        class="block text-center text-xl leading-[5rem] lg:text-base lg:font-normal"
+        href="{{ .URL }}"
+        >{{ .Name }}</a
+      >
+      {{ end }}
+    </nav>
+    {{ end }}<!---->
+  </div>
+</header>

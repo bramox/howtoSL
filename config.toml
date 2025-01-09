@@ -1,0 +1,100 @@
+baseURL = "http://localhost:1313"
+languageCode = "en"
+title = "How to SL"
+theme = "paper"
+
+defaultContentLanguage = "en"
+defaultContentLanguageInSubdir = true
+
+# Enable Hugo to output files
+publishDir = "public"
+# Enable all taxonomies
+enableInlineShortcodes = true
+
+[languages]
+  [languages.en]
+    languageName = "English"
+    weight = 1
+    title = "HT SL"
+    contentDir = "content/en"
+    [languages.en.menu]
+      [[languages.en.menu.main]]
+        identifier = "home"
+        name = "Home"
+        url = "/en/"
+        weight = 1
+      [[languages.en.menu.main]]
+        identifier = "registration"
+        name = "Registration"
+        url = "/en/registration-sl/"
+        weight = 2
+      [[languages.en.menu.main]]
+        identifier = "accounting"
+        name = "Accounting"
+        url = "/en/accounting/"
+        weight = 3
+      [[languages.en.menu.main]]
+        identifier = "links"
+        name = "Links"
+        url = "/en/links/"
+        weight = 4
+    [languages.en.params]
+      description = "Guide to opening a company in Spain"
+      keywords = ["SL", "Spain", "Business", "Company Registration"]
+      dateFormat = "January 2, 2006"
+
+  [languages.ru]
+    languageName = "Русский"
+    weight = 2
+    title = "HT SL"
+    contentDir = "content/ru"
+    [languages.ru.menu]
+      [[languages.ru.menu.main]]
+        identifier = "home"
+        name = "Главная"
+        url = "/ru/"
+        weight = 1
+      [[languages.ru.menu.main]]
+        identifier = "registration"
+        name = "Регистрация"
+        url = "/ru/registration-sl/"
+        weight = 2
+      [[languages.ru.menu.main]]
+        identifier = "accounting"
+        name = "Учет"
+        url = "/ru/accounting/"
+        weight = 3
+      [[languages.ru.menu.main]]
+        identifier = "links"
+        name = "Ссылки"
+        url = "/ru/links/"
+        weight = 4
+    [languages.ru.params]
+      description = "Руководство по открытию компании в Испании"
+      keywords = ["SL", "Испания", "Бизнес", "Регистрация компании"]
+      dateFormat = "2 January 2006"
+
+[params]
+  # color style
+  color = "linen"                     # linen, wheat, gray, light
+
+  # header social icons
+  rss = false                         # disable RSS icon
+
+  # home page profile
+  name = "How to SL"
+  bio = "Guide to opening and managing SL in Spain"
+
+  # misc
+  disableHLJS = true                  # disable highlight.js
+  monoDarkIcon = false                # use emoji instead of monochrome dark mode icon
+  darkEmoji = "🌙"                    # emoji for dark mode
+  lightEmoji = "☀️"                   # emoji for light mode
+
+  # footer
+  copyright = "Content is distributed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) license"
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true  # Enable raw HTML in Markdown

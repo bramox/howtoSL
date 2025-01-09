@@ -1,0 +1,69 @@
+{{ $bg_color := $.Scratch.Get "bg_color" }}
+<footer
+  class="mx-auto flex flex-col max-w-[--w] px-8 text-xs uppercase tracking-wider opacity-60"
+>
+  <div class="flex items-center h-[4.5rem]">
+    <div class="mr-auto">
+    {{if site.Copyright}}
+      {{site.Copyright}}
+    {{else}}
+      &copy; {{ now.Year }}
+      <a class="link" href="{{ `` | absURL }}">{{ site.Title }}</a>
+    {{end}}
+    </div>
+
+    <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank"
+      >powered by hugo️️</a
+    >️
+    <a
+      class="link"
+      href="https://github.com/nanxiaobei/hugo-paper"
+      rel="noopener"
+      target="_blank"
+      >hugo-paper</a
+    >
+    
+    <div
+    class="btn-dark text-[0] mx-6 h-6 w-6 shrink-0 cursor-pointer {{ if site.Params.monoDarkIcon }}[background:url(./theme.svg)_left_center/cover_no-repeat] dark:invert{{ else }}[background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)]{{ end }} dark:[background-position:right]"
+    role="button"
+    aria-label="Dark"
+  ></div>
+  </div>
+  <div class="text-left pb-4">
+    Content is distributed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="link" rel="noopener" target="_blank">CC BY-NC-SA 4.0</a> license
+  </div>
+</footer>
+
+<script>
+  // dark theme
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  const lightBg = '{{ $bg_color }}'.replace(/"/g, '');
+  const setDark = (isDark) => {
+    metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+    document.documentElement.classList[isDark ? 'add' : 'remove']('dark');
+    localStorage.setItem('dark', isDark);
+  };
+
+  // init
+  const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+  const darkVal = localStorage.getItem('dark');
+  if (darkVal !== null) {
+    setDark(darkVal === 'true');
+  } else {
+    setDark(darkScheme.matches);
+  }
+
+  // listen system
+  darkScheme.addEventListener('change', (event) => {
+    if (localStorage.getItem('dark') === null) {
+      setDark(event.matches);
+    }
+  });
+
+  // manual switch
+  const btnDark = document.querySelector('.btn-dark');
+  btnDark.addEventListener('click', () => {
+    const isDark = localStorage.getItem('dark') === 'true';
+    setDark(!isDark);
+  });
+</script>
