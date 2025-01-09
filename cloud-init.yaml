@@ -121,6 +121,10 @@ runcmd:
   - systemctl start nginx
   - certbot --nginx -d howtosl.com -d www.howtosl.com --non-interactive --agree-tos --email alex@bramox.com
 
+  # Create project directory with proper permissions
+  - mkdir -p /opt/howtosl
+  - chown howtosl:howtosl /opt/howtosl
+  
   # Clone and setup the project
   - su - howtosl -c "git clone https://github.com/bramox/howtoSL.git /opt/howtosl"
   - cd /opt/howtosl
