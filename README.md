@@ -27,6 +27,23 @@ hugo server -D
 
 The site will be available at `http://localhost:1313`
 
+## Local Development with Docker
+
+1. Copy the local configuration files:
+```bash
+cp docker-compose.local.yml docker-compose.yml
+cp config.local.toml config.toml
+```
+
+2. Start the development server:
+```bash
+docker-compose up
+```
+
+3. Open http://localhost:1313 in your browser
+
+Note: Don't commit docker-compose.yml and config.toml changes to avoid conflicts with production settings.
+
 ## Docker Deployment
 
 1. Build the Docker image:

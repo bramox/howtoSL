@@ -1,5 +1,7 @@
 /public/
 /resources/_gen/
+docker-compose.local.yml
+config.local.toml
 .DS_Store
 node_modules/
 dist/
